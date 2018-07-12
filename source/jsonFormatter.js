@@ -1,4 +1,4 @@
-// jQuery Plugin that converts a JSON string into an HTML formatted string with 
+// jQuery Plugin that converts a JSON string into an HTML formatted string with
 // optionally collapsible members.
 //
 // Based on example from http://bodurov.com/JsonFormatter/.
@@ -15,7 +15,8 @@
             tab: '  ',
             quoteKeys: true,
             collapsible: true,
-            hideOriginal: true
+            hideOriginal: true,
+            clipboard: true
         };
         var _settings;
         var _dateObj = new Date();
@@ -105,6 +106,36 @@
             }
             return html;
         };
+
+        var _selectAllClicked = function () {
+
+            if(!!document.selection && !!document.selection.empty) {
+                document.selection.empty();
+            } else if(window.getSelection) {
+                var sel = window.getSelection();
+                if(sel.removeAllRanges) {
+                    window.getSelection().removeAllRanges();
+                }
+            }
+        
+            var range =
+                (!!document.body && !!document.body.createTextRange)
+                    ? document.body.createTextRange()
+                    : document.createRange();
+        
+            if(!!range.selectNode)
+                range.selectNode($(".jsonFormatter")[0]);
+            else if(range.moveToElementText)
+                range.moveToElementText($(".jsonFormatter")[0]);
+        
+            if(!!range.select)
+                range.select($(".jsonFormatter")[0]);
+            else
+                window.getSelection().addRange(range);
+        
+            document.execCommand('copy');
+        }
+
         var _formatElement = function (element) {
             var json = $(element).html();
             if (json.trim() == "") json = "\"\"";
@@ -122,7 +153,17 @@
             if (_settings.hideOriginal === true) {
                 $(".jsonFormatter-original", original).hide();
             }
-            original.append("<PRE class='jsonFormatter-codeContainer'>" + html + "</PRE>");
+
+            if(_settings.clipboard === true) {
+                var clipboardIcon = `<a href="javascript:void(0);" data-toggle="tooltip" data-placement="top" title="" data-original-title="Copy to clipboard" style="position: relative; float: right;">
+                                        <i class="fa fa-clipboard"></i>
+                                    </a>`
+                original.append("<PRE class='jsonFormatter-codeContainer'>" + clipboardIcon + html + "</PRE>");
+                $(clipboardIcon).on('click', _selectAllClicked);
+            } else {
+                original.append("<PRE class='jsonFormatter-codeContainer'>" + html + "</PRE>");
+            }
+
         };
         var _expandImageClicked = function (event) {
             var container = $(this).next();
@@ -135,6 +176,9 @@
                 $(this).removeClass('jsonFormatter-collapsed').addClass('jsonFormatter-expanded');
             }
         };
+
+
+        
 
         //--------------------------------------------------------------------------
 
